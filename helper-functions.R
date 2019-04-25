@@ -2,6 +2,12 @@ make_website= function(){
   all_files= list.files(recursive = TRUE)
   rmd_files= all_files[grep(".Rmd",all_files)]
   rmd_files= rmd_files[-grep("README.Rmd",rmd_files)]
+  
+  rmarkdown::render(input= "README.Rmd",
+                    output_format = "html_document",
+                    output_dir= "docs",
+                    output_file = "index.html")
+  
   NbCores= parallel::detectCores()-1
   cl= parallel::makeCluster(NbCores)
   # parallel::clusterExport(cl=cl,
