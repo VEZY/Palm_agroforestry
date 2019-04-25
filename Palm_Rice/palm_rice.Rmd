@@ -157,7 +157,8 @@ Several files are imported :
 * The parameters input to VPALM, for each physiological age. 
 
 Creating and writing the OPF and OPS:
-```{r echo = T, results = 'hide'}
+
+```{r echo = T, results = 'hide', message=FALSE}
 planting_designs= list.files("Designs/planting_design", full.names = TRUE)
 palm_param_files= list.files("Designs/Palm_parameters", full.names = TRUE)
 param_df= 
@@ -200,7 +201,7 @@ list.files(file.path("Designs","Vpalm_outputs","scenes_palm_rice"),
   file.rename(., {file.path(dirname(.),paste0(basename(.)%>%gsub("\\.ops",'',.),"_",param_df[1,3],".ops"))})
 ```
 
-Adding the other designs OPS:
+Adding the other designs OPS
 ```{r echo = T, results = 'hide'}
 param_df_others= param_df[-c(1:length(palm_param_files)),]
 
@@ -221,7 +222,7 @@ lapply(1:nrow(param_df_others), function(x){
 
 ### ARCHIMED simulations
 
-First we have to copy the 3D scene onto the ARCHIMED installation folder:
+First we have to copy the 3D scene onto the ARCHIMED installation folder
 
 ```{r echo = T, results = 'hide'}
 scene_path= file.path(path_archimed,"app_parameters/scene/scenes_palm_rice")
@@ -229,7 +230,7 @@ if(!dir.exists(scene_path)){dir.create(scene_path)}
 file.copy("Designs/Vpalm_outputs/scenes_palm_rice",dirname(scene_path),recursive = TRUE)
 ```
 
-Then, running the simulation for each scene:
+Then, running the simulation for each scene
 
 ```{r, eval= FALSE}
 parameters= list("xMin","yMin","xMax","yMax")
@@ -446,7 +447,7 @@ Light transmitted to the soil throughout the day:
 
 * Low density: 
 
-```{r}
+```{r, message=FALSE}
 plane_df_step%>%
   filter(Treatment== "DA1_MAP_72_inter11xintra9_d101" |
            Treatment== "DA1_MAP_90_inter11xintra9_d101")%>%
@@ -468,7 +469,7 @@ gganimate::anim_save(filename = 'map_light_rice_low_density.gif',path = "outputs
 
 * High density: 
 
-```{r}
+```{r, message=FALSE}
 plane_df_step%>%
   filter(Treatment== "DA1_MAP_72_inter10xintra8_d125" |
            Treatment== "DA1_MAP_90_inter10xintra8_d125")%>%
