@@ -483,7 +483,7 @@ plane_df_step%>%
   #   colours = rev(RColorBrewer::brewer.pal(5,name = "OrRd")),
   #   breaks=seq(0,13,3), 
   #   limits = c(0,13))+
-  # theme(legend.position="bottom")+
+  theme(legend.position="bottom")+
   gganimate::transition_time(Date)
 gganimate::anim_save(filename = 'map_light_rice_high_density.gif',path = "outputs")
 ```
