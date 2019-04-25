@@ -1,0 +1,7 @@
+# Part 1: one line per plant in the scene
+#sceneId plantId plantFileName x y z scale inclinationAzimut inclinationAngle stemTwist
+1	1	opf/DA1_Average_MAP_90.opf	5.5	2.25	0	1	0	0	0
+1	2	opf/DA1_Average_MAP_90.opf	16.5	6.75	0	1	0	0	0
+# [Optional] Part 2, chaining: only if scenario or project, one line per sceneId in part1
+#motherId sceneId date
+-1	1	1
