@@ -12,7 +12,7 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE,message=FALSE)
 ```
 
 ## Introduction
@@ -64,7 +64,7 @@ Sys.setenv(TZ="UTC")
 
 Setting the path to ARCHIMED on the system:  
 ```{r}
-path_archimed= "D:/OneDrive/Travail_AMAP/ARCHIMED/Archimed_feb2019"
+path_archimed= "D:/OneDrive - cirad.fr/Travail_AMAP/Softwares/ARCHIMED/Archimed__penman_medlyn"
 ```
 This path has to be adapted to where ARCHIMED is located in the computer.
 
@@ -102,16 +102,13 @@ Meteo=
 The meteo file is saved into the ARCHIMED input folders:  
 
 ```{r}
-data.table::fwrite(
-  Meteo,sep=";",
-  file = file.path(path_archimed,'app_parameters/meteo/meteo_palm_rice.csv'))
+data.table::fwrite(Meteo,sep=";",file = 'Designs/meteo_palm_rice.csv')
 ```
 
 and ARCHIMED is set to use it:
 
 ```{r}
-archimedR::set_config(file = file.path(path_archimed,"app_parameters/ArchimedConfiguration.properties"),
-                      parameter = "meteoFile", value = "app_parameters/meteo/meteo_palm_rice.csv")
+archimedR::set_config(file = "Designs/ArchimedConfiguration.properties", parameter = "meteoFile", value = "meteo_palm_rice.csv")
 ```
 
 #### General parameters
@@ -123,23 +120,18 @@ archimedR::set_config(file = file.path(path_archimed,"app_parameters/ArchimedCon
 
 ```{r}
 site_location= list(Latitude= 0.9261918, Altitude = 45)
-set_config(file = file.path(path_archimed,"app_parameters/ArchimedConfiguration.properties"),
-           parameter = "latitude", value = site_location$Latitude)
-set_config(file = file.path(path_archimed,"app_parameters/ArchimedConfiguration.properties"),
-           parameter = "altitude", value = site_location$Altitude)
+set_config(file = "Designs/ArchimedConfiguration.properties", parameter = "latitude", value = site_location$Latitude)
+set_config(file = "Designs/ArchimedConfiguration.properties", parameter = "altitude", value = site_location$Altitude)
 
-archimedR::set_config(file = file.path(path_archimed,"app_parameters/ArchimedConfiguration.properties"),
-                      parameter = "skySectors", value = 46)
-archimedR::set_config(file = file.path(path_archimed,"app_parameters/ArchimedConfiguration.properties"),
-                      parameter = "numberOfPixels", value = 200000)
+archimedR::set_config(file = "Designs/ArchimedConfiguration.properties", parameter = "skySectors", value = 46)
+archimedR::set_config(file = "Designs/ArchimedConfiguration.properties", parameter = "numberOfPixels", value = 200000)
 ```
 
 And finally the output directory:
 
 ```{r}
-sim_folder= "output_palm_rice"
-set_config(file = file.path(path_archimed,"app_parameters/ArchimedConfiguration.properties"),
-           parameter = "outputDirectory", value = sim_folder)
+sim_folder= "Designs/output_palm_rice"
+set_config(file = "Designs/ArchimedConfiguration.properties", parameter = "outputDirectory", value = basename(sim_folder))
 ```
 
 ### Making the 3D scene using VPalmr (or VPALM-IDE)
@@ -222,12 +214,8 @@ lapply(1:nrow(param_df_others), function(x){
 
 ### ARCHIMED simulations
 
-First we have to copy the 3D scene onto the ARCHIMED installation folder
-
 ```{r echo = T, results = 'hide'}
-scene_path= file.path(path_archimed,"app_parameters/scene/scenes_palm_rice")
-if(!dir.exists(scene_path)){dir.create(scene_path)}
-file.copy("Designs/Vpalm_outputs/scenes_palm_rice",dirname(scene_path),recursive = TRUE)
+scene_path= "Designs/Vpalm_outputs/scenes_palm_rice"
 ```
 
 Then, running the simulation for each scene
@@ -236,10 +224,10 @@ Then, running the simulation for each scene
 parameters= list("xMin","yMin","xMax","yMax")
 design_files= list.files(scene_path)%>%.[grep('.ops',.)]
 # Cleaning the Output folder:
-unlink(file.path(path_archimed,sim_folder), recursive = T)
+unlink(sim_folder, recursive = T)
 
 #  Reading the model manager: 
-model_manager= fread(file.path(path_archimed,"app_parameters/models_manager/models_palmtree.csv"), data.table = F)
+model_manager= fread("Designs/models_palmtree.csv", data.table = F)
 
 # NB: if ARCHIMED did not complete the simulation and returned an error, open the OPS file and 
 # change the OPF files for ones that worked previously, run a simulation, change back the OPFs
@@ -253,22 +241,18 @@ tmp=
     tmp=
       lapply(parameters, function(z){
         value= unique(planting_design[,grep(z,colnames(planting_design), ignore.case = TRUE)])
-        set_config(file = file.path(path_archimed,"app_parameters/ArchimedConfiguration.properties"),
-                   parameter = z, value = value)
+        set_config(file = "Designs/ArchimedConfiguration.properties",parameter = z, value = value)
       })
     # Set the ops name: 
-    path= file.path('app_parameters', "scene","scenes_palm_rice", x)
-    set_config(file = file.path(path_archimed,"app_parameters/ArchimedConfiguration.properties"),
-               parameter = "file", value = path)
+    path= file.path("Vpalm_outputs","scenes_palm_rice", x)
+    set_config(file = "Designs/ArchimedConfiguration.properties", parameter = "file", value = path)
     
     # Updating the model manager:
     model_manager$Node_id[model_manager$Group=="pavement"]= 2 + nrow(planting_design)
-    fwrite(model_manager, 
-           file.path(path_archimed,"app_parameters/models_manager/models_palmtree.csv"),
-           sep = ";", quote = FALSE)
+    fwrite(model_manager, "Designs/models_palmtree.csv",sep = ";", quote = FALSE)
     
     # Run ARCHIMED:
-    run_archimed(exe = file.path(path_archimed,"archimed-lib_florian-1.0.0.jar"), memory= 16384, config= "Archimed")
+    run_archimed(exe = file.path(path_archimed,"archimed.jar"), memory= 16384, config= normalizePath("Designs/ArchimedConfiguration.properties", winslash = "/"))
   })%>%unlist()
 
 # Test if the simulations ran successfully:
@@ -283,12 +267,12 @@ if(any(!tmp)){
 
 ```{r include=FALSE}
 files_sim= 
-  file.path(path_archimed,sim_folder)%>%
+  sim_folder%>%
   list.files(recursive = TRUE, full.names = TRUE)
 
 path_nodes= files_sim[grep("nodes_values.csv",files_sim)]
 path_meteo= files_sim[grep("meteo.csv",files_sim)]
-path_configs= files_sim[grep("ArchimedConfiguration.properties",files_sim)]
+# path_configs= files_sim[grep(".properties",files_sim)]
 ```
 
 
@@ -299,23 +283,6 @@ meteo=
   mutate(date= as.POSIXct(date)+ seconds(hour_start))
 ```
 
-
-```{r include=FALSE}
-# Finding the plots area:
-Area_plots= 
-  lapply(path_configs, function(x){
-    plot_dim= archimedR::read_config(file= x, parameter = c("xMin","yMin","xMax","yMax"))
-    
-    data.frame(
-      Treatment= x%>%dirname()%>%strsplit(split = "/")%>%unlist()%>%
-        head(-1)%>%tail(1)%>%strsplit(split = " ")%>%unlist()%>%head(1)%>%
-        gsub("_MAP_44","",.),
-      Area_plot= (plot_dim$xMax-plot_dim$xMin)*(plot_dim$yMax-plot_dim$yMin)
-    )
-  })%>%data.table::rbindlist()
-```
-
-
 ```{r include=FALSE}
 # Importing the node values (main output):
 nodes= 
@@ -323,10 +290,10 @@ nodes=
     name= 
       x%>%dirname()%>%strsplit(split = "/")%>%unlist()%>%
       head(-1)%>%tail(1)%>%strsplit(split = " ")%>%unlist()%>%head(1)
-    read_out_node(path = x,
-                  duration = data.frame(step= meteo$step,
-                                        timestep= meteo$timestep))%>%
-      mutate(Treatment= name)
+    # read_out_node(path = x,
+    #               duration = data.frame(step= meteo$step,
+    #                                     timestep= meteo$timestep))%>%
+    data.table::fread(x)%>%mutate(Treatment= name)
   })%>%data.table::rbindlist()%>%tibble::as_tibble()
 ```
 
@@ -334,33 +301,33 @@ nodes=
 ```{r include=FALSE}
 ngrid= 
   nodes%>%
-  mutate(id_type= ifelse(plantId==max(plantId,na.rm = TRUE),"soil","plant"))%>%
+  mutate(id_type= ifelse(plantId==-1,"soil","plant"))%>%
   ungroup()%>%
   filter(id_type=="soil")%>%
-  filter(step==step[1])%>%
+  filter(stepNumber==stepNumber[1])%>%
   group_by(Treatment)%>%
-  summarise(ngrid= n(), area_grid= sum(.data$area))
+  summarise(ngrid= n(), area_grid= sum(.data$meshArea))
 
 # Grid index: 
 grid_dim= 
-  lapply(path_configs, function(x){
-    plot_dim= archimedR::read_config(file= x, parameter = c("xMin","yMin","xMax","yMax"))
+  lapply(planting_designs, function(x){
     cbind(
-      Treatment= x%>%dirname()%>%strsplit(split = "/")%>%unlist()%>%
-        head(-1)%>%tail(1)%>%strsplit(split = " ")%>%unlist()%>%head(1)%>%
-        gsub("_MAP_44","",.),
-      data.frame(plot_dim)
+      Treatment= x%>%basename%>%gsub(".csv","",.),
+      data.table::fread(x, data.table = FALSE)%>%
+      summarise_at(vars(matches("max|min")),unique)
     )
-  })%>%data.table::rbindlist()%>%as_tibble()
+  })%>%data.table::rbindlist(use.names=TRUE)%>%as_tibble()
 
 grid_dim= 
-  merge(grid_dim,ngrid)%>%
-  mutate(surf_grid= area_grid/ngrid,
-         x_length= xMax-xMin, y_length= yMax-yMin,
-         grid_n_x= round(x_length/sqrt(surf_grid)),
-         grid_n_y= round(y_length/sqrt(surf_grid))
+  dplyr::right_join(grid_dim,ngrid%>%mutate(Treatment= gsub("DA1_MAP_[0-9][0-9]_","",Treatment)))%>%
+  mutate(
+    surf_grid= area_grid/ngrid,
+    x_length= xmax-xmin, y_length= ymax-ymin,
+    grid_n_x= round(x_length/sqrt(surf_grid)),
+    grid_n_y= round(y_length/sqrt(surf_grid))
   )
-
+grid_dim$Treatment= ngrid$Treatment
+    
 grid_index= 
   lapply(grid_dim$Treatment, function(z){
     grid_= grid_dim[grid_dim$Treatment==z,]
@@ -400,13 +367,13 @@ grid_dist=
 
 plane_df= 
   nodes%>%
-  mutate(id_type= ifelse(plantId==max(plantId,na.rm = TRUE),"soil","plant"))%>%
+  mutate(id_type= ifelse(plantId==-1,"soil","plant"))%>%
   ungroup()%>%
   filter(id_type=="soil")%>%
-  mutate(id= id-1)%>% # id 1 was the scene
-  dplyr::left_join(Area_plots, by= "Treatment")%>%
-  dplyr::left_join(meteo%>%select(date,step), by= "step")%>%
-  dplyr::left_join(grid_dist, by= c("Treatment","id"))
+  mutate(nodeId= nodeId-1)%>% # id 1 was the scene
+  # dplyr::left_join(Area_plots, by= "Treatment")%>%
+  dplyr::left_join(meteo%>%select(date,step), by= c("stepNumber"= "step"))%>%
+  dplyr::left_join(grid_dist, by= c("Treatment","nodeId"= "id"))
 
 plane_df$Treatment= as.factor(plane_df$Treatment)
 plane_df$dens= 
@@ -420,18 +387,18 @@ plane_df$MAP=
 plane_df_step= 
   plane_df%>%
   dplyr::mutate(Date= date,
-                irradiation= Global_Intercepted/area,
-                irradiance= irradiation/timestep)
-# Global intercepted radiation (irradiation) in MJ m-2 timestep-1
-# Irradiance: MJ m-2 s-1 
+                irradiation= absIrradiance_withScattering_PAR*meshArea*stepDuration,
+                irradiance= absIrradiance_withScattering_PAR)
+# Global intercepted radiation (irradiation) in J obj-1 timestep-1
+# Irradiance: W m-2 
 
 grid_df_day= 
   plane_df_step%>%
-  group_by(Treatment,id)%>%
+  group_by(Treatment,nodeId)%>%
   summarise(Date= mean(.data$date),
-            Intercepted= sum(.data$Global_Intercepted/.data$area),
-            # Global intercepted radiation in MJ m-2 d-1
-            Area_plot= mean(.data$Area_plot),
+            Intercepted= sum(.data$absIrradiance_withScattering_PAR*meshArea*stepDuration),
+            # Global intercepted radiation in J grid-1 d-1
+            # Area_plot= mean(.data$Area_plot),
             dist_tree= mean(dist_tree),
             dist_tree_x= mean(dist_tree_x),
             dens= unique(dens),
@@ -452,15 +419,17 @@ plane_df_step%>%
   filter(Treatment== "DA1_MAP_72_inter11xintra9_d101" |
            Treatment== "DA1_MAP_90_inter11xintra9_d101")%>%
   ggplot(aes(x=x, y=y))+
-  facet_wrap(~paste0("Density: ",dens, ", Age: ",MAP)) +
-  geom_tile(aes(fill=irradiance*10^6))+
+  facet_wrap(~paste0("Density: ",dens, ", Age: ",MAP),nrow = 2) +
+  geom_tile(aes(fill=irradiance))+
   coord_fixed()+
   labs(title = 'Hour: {frame_time}', x = 'x (m)', y = 'y (m)',
        fill= "Irradiance (W m-2)") +
+  # scale_fill_gradient(low = "#B30000", high = "#FEF0D9")+
+  scale_fill_viridis()+
   # scale_fill_gradientn(
-  #   colours = rev(RColorBrewer::brewer.pal(5,name = "OrRd")),
-  #   breaks=seq(0,13,3), 
-  #   limits = c(0,13))+
+  #   colours = RColorBrewer::brewer.pal(5,name = "OrRd"),
+  #   breaks=seq(0,max(irradiance),3),
+  #   limits = c(0,max(irradiance)))+
   theme(legend.position="bottom")+
   gganimate::transition_time(Date)
 gganimate::anim_save(filename = 'map_light_rice_low_density.gif',path = "outputs")
@@ -479,6 +448,7 @@ plane_df_step%>%
   coord_fixed()+
   labs(title = 'Hour: {frame_time}', x = 'x (m)', y = 'y (m)',
        fill= "Irradiance (W m-2)") +
+  scale_fill_viridis()+
   # scale_fill_gradientn(
   #   colours = rev(RColorBrewer::brewer.pal(5,name = "OrRd")),
   #   breaks=seq(0,13,3), 
@@ -528,7 +498,7 @@ ggplot2::ggsave(filename = 'Interception_daily_low_density.png',device = "png",
 
 * High density: 
 
-```{r}
+```{r warning=FALSE}
 grid_df_day%>%
   filter(Treatment== "DA1_MAP_72_inter10xintra8_d125" |
            Treatment== "DA1_MAP_90_inter10xintra8_d125")%>%
@@ -550,7 +520,7 @@ ggplot2::ggsave(filename = 'Interception_daily_high_density.png',device = "png",
 
 * Distance to the tree
 
-```{r}
+```{r warning=FALSE}
 grid_df_day%>%
   ggplot(aes(x=dist_tree, y=Intercepted))+
   facet_wrap(~paste0("Density: ",dens, ", Age: ",MAP)) +
@@ -666,4 +636,3 @@ rep_design(data = design_rep, voronois= 3,
 Here is a visualization of the simulated light interception in the 3D scene from above:
 
 ![Light interception in the 3D scene](outputs/Capture_3.PNG)
-

@@ -34,3 +34,7 @@ vignettes/*.pdf
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
+
+# Archimed simulations:
+*output_palm_rice/
+*scenes_palm_rice/

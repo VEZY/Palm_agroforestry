@@ -1,0 +1,13 @@
+# T xOrigin yOrigin zOrigin xSize ySize flat
+T 0 0 0 20 8 0 flat
+# Part 1: one line per plant in the scene
+# Archimed metadata format :
+# start comment with "[Archimed]" stuck to # sign
+# field 1 : functional group name
+#[Archimed] two
+#sceneId plantId plantFileName x y z scale inclinationAzimut inclinationAngle stemTwist
+1	1	opf/DA1_Average_MAP_90.opf	5	2	0	1	0	0	0
+1	2	opf/DA1_Average_MAP_90.opf	15	6	0	1	0	0	0
+# [Optional] Part 2, chaining: only if scenario or project, one line per sceneId in part1
+#motherId sceneId date
+-1	1	1

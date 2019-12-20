@@ -1,0 +1,6 @@
+Node_id;Group;Type;Interception model;Optical_properties;Photosynthesis
+;two;Trunk;Translucent(0);0.15,0.9;
+;;Snag;Translucent(0);0.15,0.9;
+;;Frond;Translucent(0);0.15,0.9;
+;;Leaflet;Translucent(0);0.15,0.9;FarquharEnBalance(ElaeisParameters.csv)
+4;pavement;Cobblestone;Translucent(0);0.15,0.9;
